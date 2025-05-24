@@ -36,6 +36,7 @@ def format_audio_list(
 
             # Fix: Force immediate transcription to avoid tqdm issues
             segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
+            print("Segments: ", segments)
             segments = list(segments)  # Convert generator to list immediately
 
             i = 0
