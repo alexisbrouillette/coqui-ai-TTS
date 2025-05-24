@@ -1,3 +1,45 @@
+import gc
+import os
+
+import pandas
+import torch
+import torchaudio
+from faster_whisper import WhisperModel
+from tqdm import tqdm
+
+# torch.set_num_threads(1)
+from TTS.tts.layers.xtts.tokenizer import multilingual_cleaners
+
+torch.set_num_threads(16)
+
+audio_types = (".wav", ".mp3", ".flac")
+
+
+def list_audios(basePath, contains=None):
+    # return the set of files that are valid
+    return list_files(basePath, validExts=audio_types, contains=contains)
+
+
+def list_files(basePath, validExts=None, contains=None):
+    # loop over the directory structure
+    for rootDir, dirNames, filenames in os.walk(basePath):
+        # loop over the filenames in the current directory
+        for filename in filenames:
+            # if the contains string is not none and the filename does not contain
+            # the supplied string, then ignore the file
+            if contains is not None and filename.find(contains) == -1:
+                continue
+
+            # determine the file extension of the current file
+            ext = filename[filename.rfind(".") :].lower()
+
+            # check to see if the file is an audio and should be processed
+            if validExts is None or ext.endswith(validExts):
+                # construct the path to the audio and yield it
+                audioPath = os.path.join(rootDir, filename)
+                yield audioPath
+
+
 def format_audio_list(
     audio_files,
     target_language="en",
@@ -36,7 +78,6 @@ def format_audio_list(
 
             # Fix: Force immediate transcription to avoid tqdm issues
             segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
-            print("Segments: ", segments)
             segments = list(segments)  # Convert generator to list immediately
 
             i = 0
