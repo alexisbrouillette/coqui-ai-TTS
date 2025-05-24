@@ -62,9 +62,11 @@ def format_audio_list(
     metadata = {"audio_file": [], "text": [], "speaker_name": []}
 
     if gradio_progress is not None:
-        tqdm_object = gradio_progress.tqdm(audio_files, desc="Formatting...")
+        segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
+        segments = list(segments)  # Convert without Gradio's progress
     else:
-        tqdm_object = tqdm(audio_files)
+        segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
+        segments = list(segments)
 
     for audio_path in tqdm_object:
         wav, sr = torchaudio.load(audio_path)
@@ -75,8 +77,8 @@ def format_audio_list(
         wav = wav.squeeze()
         audio_total_size += wav.size(-1) / sr
 
-        segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
-        segments = list(segments)
+        #segments, _ = asr_model.transcribe(audio_path, word_timestamps=True, language=target_language)
+        #segments = list(segments)
         i = 0
         sentence = ""
         sentence_start = None
